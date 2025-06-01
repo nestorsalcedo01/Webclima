@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario Exhaustivo sobre el Clima (50 Preguntas)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff; /* Tailwind sky-50 */
+            color: #0c4a6e; /* Tailwind sky-800 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .quiz-container {
+            background-color: white;
+            padding: 1.5rem sm:p-8;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            width: 100%;
+            max-width: 800px; /* Wider for more content */
+        }
+        .question-text {
+            font-size: 1.125rem sm:text-xl;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #075985; /* Tailwind sky-700 */
+            line-height: 1.6;
+        }
+        .option-button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background-color: #f0f9ff;
+            color: #0c4a6e;
+            border: 2px solid #bae6fd;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            font-size: 0.9rem sm:text-base;
+        }
+        .option-button:hover:not([disabled]) {
+            background-color: #e0f2fe;
+            border-color: #7dd3fc;
+        }
+        .option-button.correct-selection { /* User's correct selection */
+            background-color: #dcfce7; /* green-100 */
+            border-color: #4ade80; /* green-400 */
+            color: #15803d; /* green-700 */
+            font-weight: 600;
+        }
+        .option-button.incorrect-selection { /* User's wrong selection */
+            background-color: #fee2e2; /* red-100 */
+            border-color: #f87171; /* red-400 */
+            color: #b91c1c; /* red-700 */
+            font-weight: 600;
+        }
+         .option-button.actual-correct { /* To highlight the actual correct answer if user was wrong */
+            background-color: #dcfce7 !important;
+            border-color: #4ade80 !important;
+            color: #15803d !important;
+            font-style: italic;
+        }
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+        .feedback-container {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.375rem; /* 6px */
+            font-size: 0.85rem sm:text-sm;
+            line-height: 1.5;
+        }
+        .feedback-container.correct {
+            background-color: #f0fdf4; /* green-50 */
+            color: #16a34a; /* green-600 */
+            border-left: 4px solid #22c55e; /* green-500 */
+        }
+        .feedback-container.incorrect {
+            background-color: #fef2f2; /* red-50 */
+            color: #dc2626; /* red-600 */
+            border-left: 4px solid #ef4444; /* red-500 */
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0f2fe;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #0ea5e9;
+            width: 0%;
+            transition: width 0.3s ease-in-out;
+            border-radius: 0.5rem;
+        }
+        .primary-button {
+            background-color: #0ea5e9;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+            font-size: 0.9rem sm:text-base;
+        }
+        .primary-button:hover {
+            background-color: #0284c7;
+        }
+        .primary-button:disabled {
+            background-color: #7dd3fc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div id="start-screen">
+            <h1 class="text-2xl sm:text-3xl font-bold text-center text-sky-700 mb-6">Cuestionario Exhaustivo sobre el Clima</h1>
+            <p class="text-center mb-8 text-sm sm:text-base">¡50 preguntas para desafiar tu conocimiento! Las preguntas y opciones se mezclan cada vez.</p>
+            <button id="start-button" class="primary-button w-full">Comenzar Cuestionario</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div id="question-number" class="text-xs sm:text-sm text-slate-500 mb-2"></div>
+            <div id="question-text" class="question-text"></div>
+            <div id="options-container"></div>
+            <div id="feedback-container" class="feedback-container hidden">
+                <strong id="feedback-title" class="block mb-1"></strong>
+                <p id="feedback-text"></p>
+            </div>
+            <button id="next-button" class="primary-button mt-6 w-full" disabled>Siguiente Pregunta</button>
+        </div>
+
+        <div id="results-screen" class="hidden text-center">
+            <h2 class="text-xl sm:text-2xl font-bold text-sky-700 mb-4">Resultados del Cuestionario</h2>
+            <p id="score-text" class="text-lg sm:text-xl mb-2"></p>
+            <p id="percentage-text" class="text-base sm:text-lg mb-6"></p>
+            <p id="final-message" class="text-sm sm:text-base mb-8"></p>
+            <button id="restart-button" class="primary-button w-full">Intentar de Nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            // Clima vs. Tiempo & Atmósfera General
+            {
+                question: "El 'tiempo atmosférico' se refiere al estado promedio de la atmósfera durante un período de al menos 10 años.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Esto describe el 'clima'. El 'tiempo atmosférico' es el estado de la atmósfera en un momento y lugar específico, siendo variable y de corta duración."
+            },
+            {
+                question: "La atmósfera protege a la Tierra de las radiaciones solares dañinas.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. La atmósfera, especialmente capas como la ozonosfera (dentro de la estratosfera), absorbe gran parte de la radiación ultravioleta perjudicial del Sol."
+            },
+            {
+                question: "¿Qué porcentaje aproximado de la atmósfera terrestre corresponde al Oxígeno?",
+                type: "multiple_choice",
+                options: ["78%", "21%", "1%", "0.04%"],
+                answer: "21%",
+                explanation: {
+                    "78%": "Incorrecto. Este es el porcentaje aproximado de Nitrógeno, el gas más abundante.",
+                    "21%": "Correcto. El Oxígeno constituye alrededor del 21% de la atmósfera, esencial para la vida.",
+                    "1%": "Incorrecto. Este porcentaje aproximado corresponde al Argón y otros gases nobles en conjunto.",
+                    "0.04%": "Incorrecto. Esto se acerca más a la concentración de Dióxido de Carbono."
+                }
+            },
+            // Capas de la Atmósfera
+            {
+                question: "La Troposfera es la capa atmosférica donde se desarrollan la mayoría de los fenómenos meteorológicos.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. Al ser la capa más cercana a la superficie y contener la mayor parte del vapor de agua y aerosoles, la Troposfera es la cuna del tiempo y el clima."
+            },
+            {
+                question: "¿En qué capa atmosférica se encuentra la mayor concentración de la capa de ozono?",
+                type: "multiple_choice",
+                options: ["Troposfera", "Estratosfera", "Mesosfera", "Termosfera"],
+                answer: "Estratosfera",
+                explanation: {
+                    "Troposfera": "Incorrecto. Aunque hay algo de ozono en la troposfera (a veces contaminante), la capa protectora principal está más arriba.",
+                    "Estratosfera": "Correcto. La Estratosfera, ubicada entre los 15 y 50 km de altitud aproximadamente, contiene la mayor parte del ozono atmosférico que nos protege de la radiación UV.",
+                    "Mesosfera": "Incorrecto. La Mesosfera está por encima de la Estratosfera.",
+                    "Termosfera": "Incorrecto. La Termosfera es una capa mucho más alta."
+                }
+            },
+            {
+                question: "La Mesosfera es la capa más caliente de la atmósfera.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. La temperatura en la Mesosfera disminuye con la altitud, alcanzando los valores más bajos de la atmósfera. La Termosfera, por encima de ella, es donde se registran temperaturas muy elevadas."
+            },
+            {
+                question: "Las auroras boreales y australes ocurren principalmente en la:",
+                type: "multiple_choice",
+                options: ["Estratosfera", "Mesosfera", "Termosfera (Ionosfera)", "Exosfera"],
+                answer: "Termosfera (Ionosfera)",
+                explanation: {
+                    "Estratosfera": "Incorrecto. La Estratosfera es conocida por la capa de ozono.",
+                    "Mesosfera": "Incorrecto. En la Mesosfera se desintegran los meteoritos.",
+                    "Termosfera (Ionosfera)": "Correcto. Las auroras son causadas por partículas solares que interactúan con los gases de la Termosfera (especialmente en su región ionizada, la Ionosfera).",
+                    "Exosfera": "Incorrecto. La Exosfera es la capa más externa, donde la atmósfera se dispersa en el espacio."
+                }
+            },
+            // Movimientos de la Tierra
+            {
+                question: "El movimiento de Traslación de la Tierra es el responsable principal de la sucesión del día y la noche.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. El movimiento de Rotación de la Tierra sobre su propio eje (que dura aproximadamente 24 horas) es el que causa la sucesión del día y la noche. La Traslación causa las estaciones."
+            },
+            {
+                question: "La inclinación del eje de rotación de la Tierra es un factor clave para la existencia de las estaciones del año.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. La inclinación de aproximadamente 23.5° del eje terrestre, combinada con el movimiento de traslación alrededor del Sol, hace que diferentes partes de la Tierra reciban más luz solar directa en distintas épocas del año, originando las estaciones."
+            },
+            // Elementos del Clima - Temperatura
+            {
+                question: "El termómetro es el instrumento utilizado para medir la humedad del aire.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. El termómetro mide la temperatura. Para medir la humedad se utiliza el higrómetro o psicrómetro."
+            },
+             {
+                question: "Generalmente, la temperatura del aire disminuye con la altitud en la Troposfera.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. En la Troposfera, la temperatura tiende a descender a medida que se asciende, a una tasa promedio de unos 6.5°C por cada 1000 metros."
+            },
+            // Elementos del Clima - Precipitación
+            {
+                question: "¿Cuál de las siguientes NO es una forma de precipitación?",
+                type: "multiple_choice",
+                options: ["Lluvia", "Nieve", "Granizo", "Niebla"],
+                answer: "Niebla",
+                explanation: {
+                    "Lluvia": "Incorrecto. La lluvia es una forma común de precipitación líquida.",
+                    "Nieve": "Incorrecto. La nieve es una forma de precipitación sólida.",
+                    "Granizo": "Incorrecto. El granizo es una forma de precipitación sólida, generalmente asociada a tormentas intensas.",
+                    "Niebla": "Correcto. La niebla es una nube a nivel del suelo (agua condensada en suspensión), pero no se considera precipitación ya que no cae desde las nubes hacia la superficie."
+                }
+            },
+            {
+                question: "El pluviómetro se utiliza para medir la velocidad del viento.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. El pluviómetro se utiliza para medir la cantidad de precipitación líquida. La velocidad del viento se mide con un anemómetro."
+            },
+            {
+                question: "Las lluvias orográficas se producen cuando el aire caliente y húmedo asciende debido al calentamiento de la superficie.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Esto describe las lluvias de convección. Las lluvias orográficas ocurren cuando una masa de aire húmedo es forzada a ascender al encontrarse con una barrera montañosa."
+            },
+            {
+                question: "Las lluvias frontales ocurren en la zona de contacto entre dos masas de aire con diferentes características de temperatura y humedad.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. Estas zonas de contacto se llaman frentes, y el ascenso del aire más cálido (o el empuje del aire frío bajo el cálido) provoca la condensación y precipitación."
+            },
+            {
+                question: "Las lluvias de convección son típicas de zonas montañosas muy elevadas.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Aunque pueden ocurrir en montañas, las lluvias de convección son más características de zonas cálidas y húmedas, y durante las tardes de verano en latitudes medias, debido al intenso calentamiento solar de la superficie."
+            },
+             // Elementos del Clima - Humedad
+            {
+                question: "¿Qué elemento del clima se refiere a la cantidad de vapor de agua presente en el aire?",
+                type: "multiple_choice",
+                options: ["Presión atmosférica", "Temperatura", "Humedad", "Nubosidad"],
+                answer: "Humedad",
+                explanation: {
+                    "Presión atmosférica": "Incorrecto. La presión atmosférica es el peso del aire.",
+                    "Temperatura": "Incorrecto. La temperatura es el grado de calor o frío del aire.",
+                    "Humedad": "Correcto. La humedad es la medida del contenido de vapor de agua en la atmósfera.",
+                    "Nubosidad": "Incorrecto. La nubosidad es la fracción del cielo cubierta por nubes."
+                }
+            },
+            {
+                question: "El higrómetro es el instrumento que mide la presión atmosférica.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. El higrómetro (o psicrómetro) mide la humedad del aire. La presión atmosférica se mide con un barómetro."
+            },
+            // Elementos del Clima - Presión Atmosférica
+            {
+                question: "Las áreas de baja presión atmosférica (borrascas) suelen asociarse con tiempo estable y cielos despejados.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Las áreas de baja presión suelen estar asociadas con tiempo inestable, nubosidad y precipitaciones, debido al ascenso de aire."
+            },
+            {
+                question: "La presión atmosférica generalmente aumenta con la altitud.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. La presión atmosférica disminuye con la altitud, ya que hay menos cantidad de aire por encima ejerciendo peso."
+            },
+            {
+                question: "Un barómetro aneroide funciona utilizando una columna de mercurio.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. El barómetro de mercurio utiliza una columna de mercurio. Un barómetro aneroide no contiene líquido y funciona mediante una cápsula metálica flexible que se expande o contrae con los cambios de presión."
+            },
+            // Elementos del Clima - Viento
+            {
+                question: "El viento se origina principalmente por diferencias de temperatura, sin influencia de la presión.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. El viento se origina principalmente por diferencias de presión atmosférica (el aire se mueve de zonas de alta a baja presión). Las diferencias de temperatura contribuyen a crear esas diferencias de presión."
+            },
+            {
+                question: "¿Qué instrumento se utiliza para medir la dirección del viento?",
+                type: "multiple_choice",
+                options: ["Anemómetro", "Veleta", "Termómetro", "Higrómetro"],
+                answer: "Veleta",
+                explanation: {
+                    "Anemómetro": "Incorrecto. El anemómetro mide la velocidad o intensidad del viento.",
+                    "Veleta": "Correcto. La veleta indica la dirección desde la cual sopla el viento.",
+                    "Termómetro": "Incorrecto. El termómetro mide la temperatura.",
+                    "Higrómetro": "Incorrecto. El higrómetro mide la humedad."
+                }
+            },
+            // Elementos del Clima - Nubosidad
+            {
+                question: "La nubosidad se mide en una escala de 'octas', que representa octavos de cielo cubierto.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. La nubosidad se estima visualmente o con instrumentos indicando cuántos octavos del cielo están cubiertos por nubes (0/8 cielo despejado, 8/8 cielo cubierto)."
+            },
+            // Balance Térmico
+            {
+                question: "La Tierra recibe la mayor parte de su energía del núcleo terrestre.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. La Tierra recibe la inmensa mayoría de su energía del Sol, en forma de radiación solar. El calor interno de la Tierra contribuye muy poco al balance energético superficial."
+            },
+            {
+                question: "El efecto invernadero es un fenómeno enteramente causado por la contaminación humana.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Existe un efecto invernadero natural, causado por gases como el vapor de agua y el dióxido de carbono, que es esencial para mantener la Tierra a una temperatura habitable. La actividad humana ha intensificado este efecto."
+            },
+            // Factores Geográficos que Modifican el Clima
+            {
+                question: "La latitud no influye significativamente en la temperatura de un lugar.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. La latitud es uno de los factores más importantes. Las zonas cercanas al ecuador (baja latitud) reciben los rayos solares de forma más directa y durante más tiempo, resultando en temperaturas más altas que en las altas latitudes (cerca de los polos)."
+            },
+            {
+                question: "¿Cómo afecta generalmente la altitud a la temperatura?",
+                type: "multiple_choice",
+                options: ["La temperatura aumenta con la altitud.", "La temperatura disminuye con la altitud.", "La altitud no afecta la temperatura.", "La temperatura se vuelve más estable con la altitud."],
+                answer: "La temperatura disminuye con la altitud.",
+                explanation: {
+                    "La temperatura aumenta con la altitud.": "Incorrecto. Esto ocurre en algunas capas superiores de la atmósfera como la Estratosfera, pero no en la Troposfera donde vivimos.",
+                    "La temperatura disminuye con la altitud.": "Correcto. En la Troposfera, a mayor altitud, el aire es menos denso y la temperatura tiende a ser más baja.",
+                    "La altitud no afecta la temperatura.": "Incorrecto. La altitud es un factor modificador clave.",
+                    "La temperatura se vuelve más estable con la altitud.": "Incorrecto. Si bien la amplitud térmica diaria puede ser grande en alta montaña, la temperatura promedio general es más baja."
+                }
+            },
+            {
+                question: "El fenómeno de 'continentalidad' implica que las zonas alejadas de grandes masas de agua tienden a tener menores amplitudes térmicas anuales.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. La continentalidad implica que las zonas alejadas del mar (que actúa como regulador térmico) tienen MAYORES amplitudes térmicas anuales (veranos más calurosos e inviernos más fríos) que las zonas costeras."
+            },
+            {
+                question: "Las corrientes marinas cálidas pueden hacer que el clima de las costas que bañan sea más frío.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Las corrientes marinas cálidas transportan calor y tienden a suavizar los inviernos y aumentar las temperaturas de las costas que bañan, haciéndolas más templadas de lo que correspondería por su latitud."
+            },
+            {
+                question: "El relieve montañoso siempre causa un aumento de las precipitaciones en todas sus laderas por igual.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. El relieve montañoso suele aumentar las precipitaciones en la ladera de barlovento (donde el viento choca y el aire asciende), mientras que en la ladera de sotavento (opuesta) se produce un efecto de 'sombra de lluvia', con condiciones más secas."
+            },
+             {
+                question: "Las isotermas son líneas que unen puntos de igual:",
+                type: "multiple_choice",
+                options: ["Presión", "Humedad", "Temperatura", "Precipitación"],
+                answer: "Temperatura",
+                explanation: {
+                    "Presión": "Incorrecto. Las líneas de igual presión se llaman isobaras.",
+                    "Humedad": "Incorrecto. No hay un término tan común para líneas de igual humedad como isohigras, pero no son isotermas.",
+                    "Temperatura": "Correcto. Las isotermas son líneas imaginarias utilizadas en los mapas para conectar puntos que tienen la misma temperatura en un momento dado o en promedio.",
+                    "Precipitación": "Incorrecto. Las líneas de igual precipitación se llaman isoyetas."
+                }
+            },
+            // Zonas Climáticas
+            {
+                question: "Los climas cálidos se caracterizan por tener una marcada estación invernal con nieve.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Los climas cálidos, ubicados principalmente en la zona intertropical, se caracterizan por temperaturas elevadas durante todo el año y generalmente no experimentan inviernos con nieve (excepto en muy alta montaña dentro de estas latitudes)."
+            },
+            {
+                question: "Los climas templados se ubican principalmente cerca de los polos.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Los climas templados se ubican en las latitudes medias, entre la zona intertropical y los círculos polares. Cerca de los polos se encuentran los climas fríos."
+            },
+            {
+                question: "¿Cuál es una característica principal de los climas fríos?",
+                type: "multiple_choice",
+                options: ["Cuatro estaciones bien diferenciadas con veranos calurosos.", "Temperaturas elevadas y constantes todo el año.", "Inviernos largos y muy fríos, con veranos cortos y frescos.", "Abundantes lluvias repartidas durante todo el año."],
+                answer: "Inviernos largos y muy fríos, con veranos cortos y frescos.",
+                explanation: {
+                    "Cuatro estaciones bien diferenciadas con veranos calurosos.": "Incorrecto. Esto es más característico de los climas templados continentales.",
+                    "Temperaturas elevadas y constantes todo el año.": "Incorrecto. Esto describe a los climas cálidos ecuatoriales.",
+                    "Inviernos largos y muy fríos, con veranos cortos y frescos.": "Correcto. Esta es la definición general de los climas fríos, como los polares o de alta montaña.",
+                    "Abundantes lluvias repartidas durante todo el año.": "Incorrecto. Si bien algunos climas fríos pueden ser húmedos, otros son muy secos (como los desiertos polares)."
+                }
+            },
+            {
+                question: "Los climas ecuatoriales, un subtipo de clima cálido, suelen tener una estación seca muy prolongada.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Los climas ecuatoriales se caracterizan por ser cálidos y muy lluviosos durante todo el año, sin una estación seca definida o muy corta. Los climas tropicales (otro subtipo de cálido) sí tienen una estación seca y una lluviosa más marcadas."
+            },
+             {
+                question: "El clima Mediterráneo, un tipo de clima templado, se caracteriza por:",
+                type: "multiple_choice",
+                options: ["Lluvias abundantes todo el año", "Veranos secos y calurosos, e inviernos suaves y húmedos", "Inviernos muy fríos con nieve abundante", "Temperaturas constantes sin grandes variaciones estacionales"],
+                answer: "Veranos secos y calurosos, e inviernos suaves y húmedos",
+                explanation: {
+                    "Lluvias abundantes todo el año": "Incorrecto. Esto es más característico del clima oceánico o algunos climas cálidos.",
+                    "Veranos secos y calurosos, e inviernos suaves y húmedos": "Correcto. Esta es la combinación distintiva del clima Mediterráneo.",
+                    "Inviernos muy fríos con nieve abundante": "Incorrecto. Los inviernos mediterráneos son generalmente suaves.",
+                    "Temperaturas constantes sin grandes variaciones estacionales": "Incorrecto. El clima Mediterráneo tiene estaciones diferenciadas, aunque no tan extremas como los continentales."
+                }
+            },
+            // Clima y Sociedades/Economía
+            {
+                question: "El desarrollo tecnológico ha permitido a las sociedades superar completamente las dificultades impuestas por el clima.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Si bien el desarrollo tecnológico ha permitido superar MUCHAS dificultades (riego, construcciones adaptadas, etc.), las sociedades siguen siendo vulnerables a fenómenos climáticos extremos y a los cambios climáticos a largo plazo. No se han superado completamente."
+            },
+            {
+                question: "Según el texto, los climas templados son propicios para el cultivo de cereales, oleaginosas y fibras.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. El texto menciona específicamente que estos cultivos, junto con carnes vacunas y porcinas, se dan bien en climas templados."
+            },
+            {
+                question: "En climas fríos y húmedos, es común el cultivo de frutas como mangos y papayas.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Los mangos y papayas son frutas tropicales, propias de climas cálidos. En climas fríos y húmedos, el texto menciona el cultivo de 'frutas finas o rojas' como cerezas y frambuesas."
+            },
+            {
+                question: "¿Qué tipo de ganadería se menciona en el texto como desarrollada en climas fríos junto con frutas finas?",
+                type: "multiple_choice",
+                options: ["Vacuna", "Porcina", "Caprina y Ovina", "Equina"],
+                answer: "Caprina y Ovina",
+                explanation: {
+                    "Vacuna": "Incorrecto. El texto asocia la ganadería vacuna con climas templados.",
+                    "Porcina": "Incorrecto. El texto también asocia la ganadería porcina con climas templados.",
+                    "Caprina y Ovina": "Correcto. El texto indica que 'en climas fríos se ha logrado el desarrollo de la ganadería caprina y ovina'.",
+                    "Equina": "Incorrecto. El texto no hace mención específica a la ganadería equina en este contexto."
+                }
+            },
+            {
+                question: "El turismo de deportes invernales es característico de zonas con clima cálido y árido.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Los deportes invernales, como el esquí, requieren nieve y temperaturas frías, por lo que son característicos de 'zonas de frío y relieves montañosos'. El turismo en climas cálidos y áridos se menciona como 'turismo aventura'."
+            },
+            {
+                question: "Según el texto, los centros de veraneo más importantes del planeta se encuentran en zonas de clima cálido cercanas al mar.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. El texto afirma que 'Las zonas de clima cálido cercanas al mar son los centros de veraneo más importantes del planeta'."
+            },
+            {
+                question: "El 'turismo aventura' es una actividad económica que, según el texto, se ha desarrollado en regiones de clima:",
+                type: "multiple_choice",
+                options: ["Frío y húmedo", "Templado oceánico", "Cálido y muy lluvioso", "Cálido y árido"],
+                answer: "Cálido y árido",
+                explanation: {
+                    "Frío y húmedo": "Incorrecto. Para estas zonas el texto menciona deportes invernales o cultivo de frutas finas.",
+                    "Templado oceánico": "Incorrecto. No se especifica este tipo de turismo para climas oceánicos en el texto.",
+                    "Cálido y muy lluvioso": "Incorrecto. Podría haber turismo, pero el 'turismo aventura' se asocia específicamente a otro tipo de clima en el texto.",
+                    "Cálido y árido": "Correcto. El texto indica que 'En los climas cálidos y áridos, el turismo aventura es una actividad que ha logrado sostener la economía de esas regiones'."
+                }
+            },
+            // Preguntas de síntesis o aplicación ligera
+            {
+                question: "Si una ciudad costera está bañada por una corriente marina fría, es probable que su clima sea más cálido y húmedo de lo esperado por su latitud.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Una corriente marina fría tiende a ENFRIAR y SECAR el clima de las costas adyacentes, ya que enfría el aire sobre ella (reduciendo la evaporación y la capacidad de retener humedad)."
+            },
+            {
+                question: "Una región ubicada a gran altitud en la zona ecuatorial (baja latitud) inevitablemente tendrá un clima cálido y tropical.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Aunque esté en baja latitud, la gran altitud causará un descenso significativo de la temperatura. Es posible tener climas fríos de alta montaña incluso en el ecuador (ej. cumbres de los Andes)."
+            },
+            {
+                question: "La principal diferencia entre 'tiempo' y 'clima' radica en la escala temporal que consideran.",
+                type: "true_false",
+                answer: true,
+                explanation: "Verdadero. El tiempo describe las condiciones atmosféricas en un momento específico (corto plazo), mientras que el clima describe el promedio de estas condiciones a lo largo de muchos años (largo plazo)."
+            },
+            {
+                question: "Si una zona experimenta veranos muy calurosos e inviernos muy fríos, con una gran diferencia de temperatura entre ambas estaciones, probablemente tiene un clima de tipo:",
+                type: "multiple_choice",
+                options: ["Oceánico", "Ecuatorial", "Continental", "Polar"],
+                answer: "Continental",
+                explanation: {
+                    "Oceánico": "Incorrecto. Los climas oceánicos, por la influencia del mar, tienen amplitudes térmicas moderadas (veranos frescos, inviernos suaves).",
+                    "Ecuatorial": "Incorrecto. Los climas ecuatoriales son cálidos todo el año con poca variación.",
+                    "Continental": "Correcto. Los climas continentales, al estar alejados de la influencia moderadora del mar, se caracterizan por una gran amplitud térmica anual.",
+                    "Polar": "Incorrecto. Los climas polares son fríos todo el año."
+                }
+            },
+            {
+                question: "La contaminación atmosférica afecta únicamente a la Troposfera, sin tener impacto en las capas superiores.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. Si bien la mayoría de la contaminación que nos afecta directamente ocurre en la Troposfera, ciertos contaminantes (como los CFC que destruían el ozono) pueden alcanzar la Estratosfera y tener efectos significativos allí."
+            },
+            {
+                question: "El proceso por el cual la Tierra devuelve energía al espacio se realiza principalmente mediante radiación de onda corta, similar a la que recibe del Sol.",
+                type: "true_false",
+                answer: false,
+                explanation: "Falso. La Tierra recibe energía del Sol como radiación de onda corta (luz visible, UV). La Tierra, al estar más fría que el Sol, irradia energía de vuelta al espacio principalmente como radiación de onda larga (infrarroja)."
+            }
+        ];
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+
+        const startButton = document.getElementById('start-button');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+
+        const questionTextElement = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackTitleElement = document.getElementById('feedback-title');
+        const feedbackTextElement = document.getElementById('feedback-text');
+        
+        const scoreTextElement = document.getElementById('score-text');
+        const percentageTextElement = document.getElementById('percentage-text');
+        const finalMessageElement = document.getElementById('final-message');
+        const progressBar = document.getElementById('progress-bar');
+        const questionNumberElement = document.getElementById('question-number');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswerProcessed = false;
+        let shuffledQuestions = [];
+
+        startButton.addEventListener('click', startQuiz);
+        nextButton.addEventListener('click', handleNextQuestion);
+        restartButton.addEventListener('click', startQuiz);
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedAnswerProcessed = false;
+            shuffledQuestions = shuffleArray(allQuestions);
+            startScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            nextButton.disabled = true;
+            feedbackContainer.classList.add('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            selectedAnswerProcessed = false;
+            feedbackContainer.classList.add('hidden');
+            feedbackTextElement.textContent = '';
+            feedbackTitleElement.textContent = '';
+            nextButton.disabled = true;
+
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                showResults(); // Should not happen if nextButton logic is correct, but as a safeguard.
+                return;
+            }
+
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            questionTextElement.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+
+            const progressPercentage = ((currentQuestionIndex) / shuffledQuestions.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            questionNumberElement.textContent = `Pregunta ${currentQuestionIndex + 1} de ${shuffledQuestions.length}`;
+
+            if (currentQuestion.type === "true_false") {
+                const trueButton = document.createElement('button');
+                trueButton.textContent = "Verdadero";
+                trueButton.classList.add('option-button');
+                trueButton.addEventListener('click', () => selectAnswer(true, trueButton));
+                optionsContainer.appendChild(trueButton);
+
+                const falseButton = document.createElement('button');
+                falseButton.textContent = "Falso";
+                falseButton.classList.add('option-button');
+                falseButton.addEventListener('click', () => selectAnswer(false, falseButton));
+                optionsContainer.appendChild(falseButton);
+            } else if (currentQuestion.type === "multiple_choice") {
+                const shuffledOptions = shuffleArray(currentQuestion.options);
+                shuffledOptions.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.textContent = optionText;
+                    button.classList.add('option-button');
+                    button.addEventListener('click', () => selectAnswer(optionText, button));
+                    optionsContainer.appendChild(button);
+                });
+            }
+        }
+
+        function selectAnswer(userAnswer, buttonElement) {
+            if (selectedAnswerProcessed) return;
+            selectedAnswerProcessed = true;
+
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            const isCorrect = (userAnswer === currentQuestion.answer);
+
+            Array.from(optionsContainer.children).forEach(btn => {
+                btn.disabled = true;
+                if (currentQuestion.type === "multiple_choice" && btn.textContent === currentQuestion.answer) {
+                     if(!isCorrect) btn.classList.add('actual-correct'); // Highlight correct if user was wrong
+                } else if (currentQuestion.type === "true_false") {
+                    const correctText = currentQuestion.answer ? "Verdadero" : "Falso";
+                    if (btn.textContent === correctText && !isCorrect) {
+                         btn.classList.add('actual-correct');
+                    }
+                }
+            });
+
+            feedbackContainer.classList.remove('hidden', 'correct', 'incorrect');
+
+            if (isCorrect) {
+                score++;
+                buttonElement.classList.add('correct-selection');
+                feedbackTitleElement.textContent = "¡Correcto!";
+                feedbackContainer.classList.add('correct');
+                if (currentQuestion.type === "true_false") {
+                    // If true_false and correct, the explanation might be for the concept itself or why it's true/false
+                    feedbackTextElement.textContent = currentQuestion.explanation || (currentQuestion.answer ? "La afirmación es correcta." : "La afirmación es efectivamente falsa.");
+                } else { // Multiple choice correct
+                     feedbackTextElement.textContent = currentQuestion.explanation[currentQuestion.answer] || currentQuestion.explanation['correct_explanation'] || "¡Bien hecho!";
+                }
+            } else { // Incorrect Answer
+                buttonElement.classList.add('incorrect-selection');
+                feedbackTitleElement.textContent = "Incorrecto";
+                feedbackContainer.classList.add('incorrect');
+
+                if (currentQuestion.type === "true_false") {
+                    feedbackTextElement.textContent = currentQuestion.explanation;
+                } else if (currentQuestion.type === "multiple_choice") {
+                     // Provide explanation for the user's wrong choice if available, otherwise generic
+                    feedbackTextElement.textContent = currentQuestion.explanation[userAnswer] || `La respuesta correcta era "${currentQuestion.answer}". ${currentQuestion.explanation[currentQuestion.answer] || currentQuestion.explanation['correct_explanation'] || ''}`;
+                }
+            }
+            nextButton.disabled = false;
+            nextButton.focus();
+        }
+
+        function handleNextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            progressBar.style.width = '100%';
+
+            const percentage = Math.round((score / shuffledQuestions.length) * 100);
+            scoreTextElement.textContent = `Tu puntuación: ${score} de ${shuffledQuestions.length}`;
+            percentageTextElement.textContent = `Porcentaje de aciertos: ${percentage}%`;
+
+            let message = "";
+            if (percentage === 100) {
+                message = "¡PERFECTO! ¡Eres un verdadero experto en climatología!";
+            } else if (percentage >= 80) {
+                message = "¡Excelente! Tienes un conocimiento muy profundo sobre el clima.";
+            } else if (percentage >= 60) {
+                message = "¡Muy bien! Has demostrado un buen entendimiento general.";
+            } else if (percentage >= 40) {
+                message = "¡Buen intento! Hay varios conceptos que puedes repasar para mejorar.";
+            } else {
+                message = "Necesitas dedicar más tiempo al estudio del clima. ¡No te desanimes y vuelve a intentarlo!";
+            }
+            finalMessageElement.textContent = message;
+        }
+    </script>
+</body>
+</html>
